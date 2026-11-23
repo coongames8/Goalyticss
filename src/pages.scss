@@ -985,6 +985,22 @@ table {
 	}
 }
 
+.auth-forgot {
+	text-align: right;
+	margin-top: -0.5rem;
+
+	.auth-link {
+		color: rgba(255, 255, 255, 0.7);
+		text-decoration: none;
+		font-size: 0.9rem;
+
+		&:hover {
+			color: var(--neon-blue);
+			text-decoration: underline;
+		}
+	}
+}
+
 .auth-footer {
 	text-align: center;
 	margin-top: 1rem;

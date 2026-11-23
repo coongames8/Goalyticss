@@ -63,6 +63,10 @@ export const Login = () => {
                         LOGIN
                     </button>
 
+                    <div className="auth-forgot">
+                        <NavLink to='/forgot-password' className="auth-link">Forgot Password?</NavLink>
+                    </div>
+
                     <div className="auth-footer">
                         <span>Don't have an account?</span>
                         <NavLink to='/register' className="auth-link">Sign Up &raquo;</NavLink>

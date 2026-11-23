@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import AdminTips from "./pages/AdminTips";
 import { Login } from "./pages/Login";
+import { ForgotPassword } from "./pages/ForgotPassword";
 import Register from "./pages/Register";
 import Error from './pages/Error';
 import EditTip from "./pages/EditTip";
@@ -134,6 +135,7 @@ function App() {
               <Route path='about' element={<About />} />
               <Route path='*' element={<Error />} />
               <Route path='login' element={<Login />} />
+              <Route path='forgot-password' element={<ForgotPassword />} />
               <Route path='register' element={<Register />} />
 
             </Routes>

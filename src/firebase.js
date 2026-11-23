@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection, doc, getDoc, getDocs, getFirestore, limit, query, updateDoc, where, orderBy, setDoc } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -82,6 +82,18 @@ export const registerUser = (username, email, password, setSuccess, setError) =>
     setError(errorMessage);
   });
   return;
+}
+
+export const resetPassword = async (email, setSuccess, setError, setLoading) => {
+  setLoading(true);
+  try {
+    await sendPasswordResetEmail(auth, email);
+    setSuccess(`Password reset link sent to ${email}. Check your inbox and follow the link to set a new password.`);
+  } catch (error) {
+    setError(error.message.replace("Firebase: ", ""));
+  } finally {
+    setLoading(false);
+  }
 }
 
 export const updateUser = async (userId, isPremium, subscription, subDate) => {
