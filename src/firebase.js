@@ -16,6 +16,41 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
+const memoryCache = new Map();
+const CACHE_PREFIX = "goalytics_";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const invalidateCache = (key) => {
+  memoryCache.delete(key);
+  try { localStorage.removeItem(CACHE_PREFIX + key); } catch {}
+};
+
+const readCache = (key) => {
+  if (memoryCache.has(key)) return memoryCache.get(key);
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if (!raw) return null;
+    const { t, v } = JSON.parse(raw);
+    if (Date.now() - t > CACHE_TTL) {
+      localStorage.removeItem(CACHE_PREFIX + key);
+      return null;
+    }
+    memoryCache.set(key, v);
+    return v;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (key, value) => {
+  memoryCache.set(key, value);
+  try {
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ t: Date.now(), v: value }));
+  } catch {
+    // storage full or unavailable; memory cache still applies
+  }
+};
+
 export const signInUser = (email, password, setError) => {
   signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
     const user = userCredential.user;
@@ -74,19 +109,28 @@ export const getUser = async (userId, setUserData) => {
 
 
 export const getAllusers = async (setUsers, setLoading) => {
+  const cacheKey = "all_users";
+  const cached = readCache(cacheKey);
+  if (cached) {
+    setUsers(cached);
+    setLoading(false);
+  }
   setLoading(true);
   const usersCollectionRef = collection(db, "users");
 
-
   const users = [];
-  await getDocs(usersCollectionRef).then((data) => {
+  try {
+    const data = await getDocs(usersCollectionRef);
     data.forEach((doc) => {
       users.push({ id: doc.id, ...doc.data() });
     });
-  }).then(() => {
     setUsers(users);
+    writeCache(cacheKey, users);
+  } catch (err) {
+    if (!cached) setUsers([]);
+  } finally {
     setLoading(false);
-  }).catch(err => setLoading(false));
+  }
 };
 
 export const addContact = async (data, setSuccess, setError) => {
@@ -149,6 +193,8 @@ export const addTip = async (data, setError, setLoading) => {
   
 
 
+  invalidateCache("all_tips");
+  invalidateCache(`tips_${data.date}_${100}`);
   await setDoc(tipsDocRef, {
     ...data
   }).then(async () => {
@@ -171,6 +217,7 @@ export const addTip = async (data, setError, setLoading) => {
 export const updateTip = async (id, data, setError, setLoading, setData) => {
   setLoading(true);
   const tipsDocRef = doc(db, "tips", id);
+  invalidateCache("all_tips");
   await updateDoc(tipsDocRef, {
     ...data
   }).then(async () => {
@@ -202,38 +249,65 @@ export const updateTip = async (id, data, setError, setLoading, setData) => {
 
 
 export const getTips = async (pagination, setTips, setLoading, currentDate) => {
+  const cacheKey = `tips_${currentDate}_${pagination}`;
+  const cached = readCache(cacheKey);
+  if (cached) {
+    setTips(cached);
+    setLoading(false);
+  }
   setLoading(true);
   const tipsCollectionRef = collection(db, "tips");
   var q = query(tipsCollectionRef, where("date", "==", currentDate), limit(pagination));
 
   const tips = [];
-  await getDocs(q).then((data) => {
+  try {
+    const data = await getDocs(q);
     data.forEach((doc) => {
       tips.push({ id: doc.id, ...doc.data() });
     });
-  }).then(() => {
     setTips(tips);
+    writeCache(cacheKey, tips);
+  } catch (err) {
+    if (!cached) setTips([]);
+  } finally {
     setLoading(false);
-  }).catch(err => setLoading(false));
+  }
 };
 
 export const getAllTips = async (setTips, setLoading) => {
+  const cacheKey = "all_tips";
+  const cached = readCache(cacheKey);
+  if (cached) {
+    setTips(cached);
+    setLoading(false);
+  }
   setLoading(true);
   const tipsCollectionRef = collection(db, "tips");
   var q = query(tipsCollectionRef, orderBy("date"));
 
   const tips = [];
-  await getDocs(q).then((data) => {
+  try {
+    const data = await getDocs(q);
     data.forEach((doc) => {
       tips.push({ id: doc.id, ...doc.data() });
     });
-  }).then(() => {
-    setTips(tips.reverse());
+    const sorted = tips.reverse();
+    setTips(sorted);
+    writeCache(cacheKey, sorted);
+  } catch (err) {
+    if (!cached) setTips([]);
+  } finally {
     setLoading(false);
-  }).catch(err => setLoading(false));
+  }
 };
 
 export const getWonTips = async (pagination, setTips) => {
+  const cacheKey = `won_tips_${pagination}`;
+  const cached = readCache(cacheKey);
+  if (cached) {
+    setTips(cached);
+    return;
+  }
   const tipsCollectionRef = collection(db, "tips");
   const q = query(
     tipsCollectionRef,
@@ -241,20 +315,17 @@ export const getWonTips = async (pagination, setTips) => {
     where("premium", "==", true), // Only include premium tips
     limit(pagination)
   );
-  const tips = [];
   try {
     const data = await getDocs(q);
+    const tips = [];
     data.forEach((doc) => {
       tips.push({ id: doc.id, ...doc.data() });
     });
 
-    // Sort tips by date (make sure 'date' is a valid field in your documents)
     const sortedTips = tips.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // Set the sorted tips
     setTips(sortedTips);
+    writeCache(cacheKey, sortedTips);
   } catch (err) {
     console.error("Error fetching tips:", err);
-    // Handle the error as needed
   }
 };

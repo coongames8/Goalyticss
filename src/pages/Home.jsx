@@ -26,13 +26,6 @@ export default function Home({ userData }) {
 	}, [isOnline]);
 
 	useEffect(() => {
-		loading &&
-			setTimeout(() => {
-				setLoading(false);
-			}, 2000);
-	}, [loading]);
-
-	useEffect(() => {
 		if (allTips !== null) {
 			const groupedData = allTips.reduce((acc, item) => {
 				const dateKey = item.date;

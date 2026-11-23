@@ -81,16 +81,6 @@ export default function Tips({ userData }) {
 		}
 	}, [tips]);
 
-	useEffect(() => {
-		loading &&
-			setTimeout(() => {
-				setLoading(false);
-			}, 2000);
-	}, [loading]);
-
-	const handleReload = () => {
-		getTips(tipsPerPage, setTips, setLoading, formatDate(currentDate));
-	};
 	const returnDate = (dateString) => {
 		const date = new Date(dateString);
 		const options = { weekday: "long", day: "numeric" };

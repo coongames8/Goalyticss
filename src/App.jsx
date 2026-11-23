@@ -47,32 +47,23 @@ function App() {
   }, [currentUser])*/
 
   useEffect(() => {
-    const fetchUserDataWithRetry = async () => {
-      const email = currentUser?.email;
-      if (!email) return;
+    const email = currentUser?.email;
+    if (!email) return;
 
-      let retries = 0;
-      while (retries < 5) {
-        const userRef = doc(db, "users", email);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
+    let cancelled = false;
+    const fetchUserData = async () => {
+      try {
+        const userSnap = await getDoc(doc(db, "users", email));
+        if (!cancelled && userSnap.exists()) {
           setUserData(userSnap.data());
-          break;
         }
-
-        retries++;
-        await new Promise((res) => setTimeout(res, 500)); // wait 500ms before retry
-      }
-
-      if (retries === 5) {
-        console.warn("User document still not found after retries");
+      } catch (err) {
+        console.error("Error fetching user data:", err);
       }
     };
 
-    if (currentUser) {
-      fetchUserDataWithRetry();
-    }
+    fetchUserData();
+    return () => { cancelled = true; };
   }, [currentUser]);
 
 
