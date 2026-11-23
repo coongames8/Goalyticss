@@ -81,6 +81,10 @@ export default function Tips({ userData }) {
 		}
 	}, [tips]);
 
+	const handleReload = () => {
+		getTips(tipsPerPage, setTips, setLoading, formatDate(currentDate));
+	};
+
 	const returnDate = (dateString) => {
 		const date = new Date(dateString);
 		const options = { weekday: "long", day: "numeric" };
