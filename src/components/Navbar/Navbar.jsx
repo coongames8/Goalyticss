@@ -1,7 +1,7 @@
 import Logo from '../../assets/logo.png';
 import './Navbar.scss';
 import { NavLink } from "react-router-dom";
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
@@ -10,6 +10,7 @@ import { Menu, Close } from '@mui/icons-material';
 const Navbar1 = () => {
     const { currentUser } = useContext(AuthContext);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(null);
 
     const handleLogout = async () => {
         try {
@@ -21,6 +22,16 @@ const Navbar1 = () => {
     }
 
     const closeMenu = () => setMenuOpen(false);
+
+
+    useEffect(() => {
+		if (currentUser !== null) {
+			setIsAdmin(
+				currentUser.email === "kkibetkkoir@gmail.com" ||
+					currentUser.email === "kevinyegon366@gmail.com"
+			);
+		}
+	}, [currentUser]);
 
     return (
         <header className="glass-navbar">
@@ -38,13 +49,13 @@ const Navbar1 = () => {
                 </button>
                 <nav className={menuOpen ? "open" : ""}>
                     <NavLink to="/" title='home' onClick={closeMenu}>Home</NavLink>
-                    <NavLink to="/about" title='about-us' onClick={closeMenu}>About</NavLink>
                     <NavLink to="/pay" title='vip-subscription' onClick={closeMenu}>Get VIP</NavLink>
-                    {currentUser &&
-                        <NavLink to="/users-edit" title='my-profile' onClick={closeMenu}>My Profile</NavLink>
+                    {isAdmin &&
+                        <NavLink to="/admin/tips" title='admin-tips' onClick={closeMenu}>Add Tip</NavLink>
                     }
+                    <NavLink to="/about" title='about-us' onClick={closeMenu}>About</NavLink>
                     <div className="btn-wrapper">
-                        {currentUser ?
+                        {!currentUser ?
                             <NavLink className="glass-btn" onClick={handleLogout} title='signout'>Logout</NavLink> :
                             <NavLink className="glass-btn" to="/login" title='login'>Log In</NavLink>
                         }
