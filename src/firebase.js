@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection, doc, getDoc, getDocs, getFirestore, limit, query, updateDoc, where, orderBy, setDoc } from "firebase/firestore";
+import axios from 'axios';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBqHfrwEOoYkTJzi4XQsFfh4M3xjg8e6bs",
